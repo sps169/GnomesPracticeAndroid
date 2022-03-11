@@ -2,6 +2,7 @@ package com.example.gnomespractice;
 
 import android.os.Bundle;
 
+import com.example.gnomespractice.database.DatabaseController;
 import com.google.android.material.snackbar.Snackbar;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -12,6 +13,7 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
+import androidx.room.Database;
 
 import com.example.gnomespractice.databinding.ActivityMainBinding;
 
@@ -35,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
+        DatabaseController.getInstance(getApplicationContext());
     }
 
     @Override

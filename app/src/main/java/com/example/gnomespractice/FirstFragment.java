@@ -5,6 +5,7 @@ import android.text.Layout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -12,6 +13,7 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.gnomespractice.database.DatabaseController;
 import com.example.gnomespractice.databinding.FragmentFirstBinding;
 import com.example.gnomespractice.model.Color;
 import com.example.gnomespractice.model.Gnome;
@@ -26,25 +28,17 @@ public class FirstFragment extends Fragment {
     private RecyclerView recyclerView;
     private List<Gnome> gnomes;
     private FloatingActionButton floatingButton;
+
     @Override
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState
     ) {
-        gnomes = new ArrayList<>();
-        gnomes.add(new Gnome("Fede", Color.BLUE, "Caramelo 1"));
-        gnomes.add(new Gnome("Sergio", Color.GREEN, "Caramelo 2"));
-        gnomes.add(new Gnome("JuanFrancisco", Color.BLUE, "Caramelo 3"));
-        gnomes.add(new Gnome("Ulises", Color.RED, "Caramelo Feo"));
+
         binding = FragmentFirstBinding.inflate(inflater, container, false);
         recyclerView = binding.recyclerView;
-        recyclerView.setAdapter(new RecycleAdapter(gnomes));
-        recyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 2));
         floatingButton = binding.addGnomeButton;
-        floatingButton.setOnClickListener(e -> {
-            NewGnomeDialog dialog = new NewGnomeDialog(gnomes);
-            dialog.show(getParentFragmentManager(), "Nuevo Gnomo");
-        });
+
         return binding.getRoot();
 
     }
@@ -52,15 +46,44 @@ public class FirstFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-//        binding.buttonFirst.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                NavHostFragment.findNavController(FirstFragment.this)
-//                        .navigate(R.id.action_FirstFragment_to_SecondFragment);
-//            }
-//        });
+        DatabaseController database = DatabaseController.getInstance(getContext());
+        Gnome gnome1 = new Gnome("Fede", Color.BLUE, "Caramelo 1");
+        Gnome gnome2 = new Gnome("Sergio", Color.GREEN, "Caramelo 2");
+        Gnome gnome3 = new Gnome("JuanFrancisco", Color.BLUE, "Caramelo 3");
+        Gnome gnome4 = new Gnome("Ulises", Color.RED, "Caramelo Feo");
+        List<Gnome> toBeInserted = new ArrayList<>();
+        toBeInserted.add(gnome1);
+        toBeInserted.add(gnome2);
+        toBeInserted.add(gnome3);
+        toBeInserted.add(gnome4);
 
+        List<Gnome> gnomeList = database.gnomeDao().getAll();
 
+        for (int i = 0; i < gnomeList.size(); i++) {
+            for (int j = 0; j < toBeInserted.size(); j++) {
+                if (toBeInserted.get(j).getName().equals(gnomeList.get(i).getName())) {
+                    toBeInserted.remove(toBeInserted.get(j));
+                }
+            }
+        }
+
+        for (Gnome insertableGnome: toBeInserted) {
+            database.gnomeDao().insert(insertableGnome);
+        }
+
+        gnomes = database.gnomeDao().getAll();
+        recyclerView.setAdapter(new RecycleAdapter(gnomes, this));
+        recyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 2));
+        floatingButton.setOnClickListener(e -> {
+            NewGnomeDialog dialog = new NewGnomeDialog(gnomes);
+            dialog.show(getParentFragmentManager(), "Nuevo Gnomo");
+        });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        recyclerView.setAdapter(new RecycleAdapter(DatabaseController.getInstance(getContext()).gnomeDao().getAll(), this));
     }
 
     @Override
